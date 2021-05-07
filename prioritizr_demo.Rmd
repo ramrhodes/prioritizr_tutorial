@@ -1,0 +1,88 @@
+---
+title: "EcoDataScience Workshop: Conservation Planning with Prioritizr"
+author: "Anna Abelman, Vanessa Rathbone, & Rachel Rhodes"
+date: "5/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+### Load packages
+library(raster)
+library(tidyverse)
+library(sf)
+library(here)
+library(fasterize)
+library(stringr)
+library(janitor)
+library(prioritizr)
+library(rgdal)
+library(gurobi)
+```
+
+# Session summary
+For this EcoDataScience session, we will cover some basics of working with  `prioritizr` R package to build and solve conservation planning problems using marine spatial data presented in gridded format (rasters) and vector format (line, point, polygons). We will go through the basic functionalitlity and necessary inputs to create and solve a conservation planning problem, as well as some guidance on how you can custom-tailor this to the specific needs of different conservation planning exercises. For brevity, we will not go through all the pre-processing steps of cleaning up the raw spatial data we used for this analysis, but will include a separate set-up RMD that outlines what we did which you are welcome to check out on your own. 
+
+The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, & Rachel Rhodes in collaboration with Wildlife Conservation Society. The project aimed to design marine protected areas for sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
+
+# Background
+
+
+## What is Prioritizr?
+
+
+## Necessary Inputs
+The following parameters are requried as 
+
+
+
+## Example data
+
+
+
+
+# Basic Analysis
+
+## Step 1. Project Area & Planning  Units
+The first step is to define the project area, in this case the Mozambique Exclusive Economic Zone, and divide the area up into planning units. 
+
+```{r}
+
+```
+
+
+
+## Step 2. Conservation Features
+
+
+
+## Step 3. Cost
+
+
+
+## Step 4. Additional Considerations 
+
+
+
+## Step 5. Create conservation problem
+
+
+
+## Step 6. Solve the problem 
+
+
+
+# Variations to Analysis 
+
+## Different Conservation Problems
+
+
+## Boundary Penalty 
+
+
+
+
+
+
+

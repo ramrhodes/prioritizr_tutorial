@@ -1,0 +1,10 @@
+---
+title: 'EDS Workshop: Prioritizr - Setup'
+author: "Rachel Rhodes"
+date: "5/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
