@@ -1,4 +1,4 @@
-# `prioritizr` turorial
+# `prioritizr` tutorial
 
 
 ------------------

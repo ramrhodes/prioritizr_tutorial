@@ -27,13 +27,11 @@ For this EcoDataScience session, we will cover some basics of working with  `pri
 The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, & Rachel Rhodes in collaboration with Wildlife Conservation Society. The project aimed to design marine protected areas for sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
 
 # Background
-
-
 ## What is Prioritizr?
 
 
 ## Necessary Inputs
-The following parameters are requried as 
+The following parameters are required as 
 
 
 
