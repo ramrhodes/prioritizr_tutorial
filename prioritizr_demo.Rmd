@@ -22,61 +22,123 @@ library(gurobi)
 ```
 
 # Session summary
-For this EcoDataScience session, we will cover some basics of working with  `prioritizr` R package to build and solve conservation planning problems using marine spatial data presented in gridded format (rasters) and vector format (line, point, polygons). We will go through the basic functionalitlity and necessary inputs to create and solve a conservation planning problem, as well as some guidance on how you can custom-tailor this to the specific needs of different conservation planning exercises. For brevity, we will not go through all the pre-processing steps of cleaning up the raw spatial data we used for this analysis, but will include a separate set-up RMD that outlines what we did which you are welcome to check out on your own. 
+For this EcoDataScience session, we will cover some basics of working with  `prioritizr` R package to build and solve conservation planning problems using marine spatial data presented in gridded format (rasters) and vector format (line, point, polygons). We will go through the basic functionality and necessary inputs to create and solve a conservation planning problem, as well as some guidance on how you can custom-tailor this to the specific needs of different conservation planning exercises. For brevity, we will not go through all the pre-processing steps of cleaning up the raw spatial data we used for this analysis, but will include a separate set-up RMD that outlines what we did which you are welcome to check out on your own. 
 
-The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, & Rachel Rhodes in collaboration with Wildlife Conservation Society. The project aimed to design marine protected areas for sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
+The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, & Rachel Rhodes in collaboration with Wildlife Conservation Society. The project aimed to idenfity priority areas to protect sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
 
 # Background
 ## What is Prioritizr?
+The *prioritizr* R package is a systematic conservation planning tool that is used to design an optimal system of protected areas that meet conservation objectives using ecological, social, and economic criteria. Specifically, this tool is used to conduct spatial prioritization that finds the efficient spatial allocation of priority areas by formulating a mathematical optimization problem and then solving it to find an efficient solution. This type of tool is useful for conservation planning because it can help inform decisions on how and where to focus conservation efforts given limited resources and can make for a more transparent and reproducible decision making process. 
 
+For those of you familiar with other conservation planning software like Marxan,  *prioritizr* is similar, however, instead of using simulated annealing, *prioritizr* uses integer linear programming (ILP) and an algorithm solver to find the exact optimal solution and can help find cheaper solutions in a shorter period of time. It requires similar inputs which are described below. 
 
 ## Necessary Inputs
-The following parameters are required as 
+The following parameters are required to conduct and solve a conservation planning exercise with *prioritizr*: 
 
+1. Study Area: define area of interest
+
+2. Planning Units: divide the study area into set of discrete areas called planning units
+
+3. Cost: specifies the cost of including/managing each planning unit in the reserve system.  This value can be a measure of the actual fiscal cost required to purchase a piece of land or it can be a surrogate for cost that represents management costs or opportunity costs of foregone activities. 
+
+4. Conservation Features: biodiversity elements that are of conservation interest - often include species, populations, or habitats 
+
+5. Problem objective: defines the overall goal of the conservation plan & whether a specific property of the solution should be maximized or minimized (there are a number of different types of objectives that can be used which are described more later)
 
 
 ## Example data
+**Mozambique Exclusive Economic Zone:** 
+
+**Species Data:** IUCN 2021. The IUCN Red List of Threatened Species. Version 2021-1. <https://www.iucnredlist.org>
+
+**Habitat:** 
+Coral & Seagrass: Allen Coral Atlas maps, bathymetry and map statistics are © 2018-2021 Allen Coral Atlas Partnership and Vulcan, Inc. and licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+Mangroves: Giri C, Ochieng E, Tieszen LL, Zhu Z, Singh A, Loveland T, Masek J, Duke N (2011). Status and distribution of mangrove forests of the world using earth observation satellite data (version 1.4, updated by UNEP-WCMC). Global Ecology and Biogeography 20: 154-159. Data DOI: https://doi.org/10.34892/1411-w728 
+
+Seamount & Knolls: Yesson C, Clark MR, Taylor M, Rogers AD (2011). The global 
+distribution of seamounts based on 30-second bathymetry data. Deep Sea Research Part I: Oceanographic Research Papers 58: 442-453. DOI: http://dx.doi.org/10.1016/j.dsr.2011.02.004. Data DOI: http://doi.pangaea.de/10.1594/PANGAEA.757564
 
 
+**Fishing Pressure:** 
 
 
 # Basic Analysis
 
 ## Step 1. Project Area & Planning  Units
-The first step is to define the project area, in this case the Mozambique Exclusive Economic Zone, and divide the area up into planning units. 
+The first step is to define the project area - for this analysis we will use the Mozambique Exclusive Economic Zone, and divide the area up into planning units. 
+
+The size of the planning unit can impact the outcomes of the reserve design, so it is
+important to carefully consider the spatial scale of the planning unit - for this exercise we will rasterize the project area to produce a grid of cells at 10km^2 resolution. 
 
 ```{r}
 
 ```
 
 
+## Step 2. Conservation Features 
+For this exercise we will use spatial data of species distribution from IUCN and five critical habitats that are important for sharks and rays. For brevity, we will load in the species and critical habitat spatial data that has already been pre-processed (rasterized & projected in the same coordinate system) - if you would like to see how we did this you can check out the `set-up.RMD`. 
 
-## Step 2. Conservation Features
+```{r}
 
+```
 
 
 ## Step 3. Cost
+We will use fishing pressure as a surrogate for cost in our model which represents the cost of lost fishing opportunity. This will prioritize areas with the least fishing activity that overlap with areas that are critical for sharks and rays - this will show us the reserve designs that have the least impact on fishers (alternatively you could create an inverse of this cost layer to prioritize areas with the most fishing activity that overlap with critical areas for sharks and rays which would have the most benefit for sharks and rays, but greater impacts on fishers).
+
+```{r}
+
+```
 
 
+## Step 4. Create conservation problem
+Now that we have these three basic inputs, it is time to start constructing our conservation problem. 
 
-## Step 4. Additional Considerations 
+There are a few key considerations that go into this including: 
+(1) what type of problem objective we want to use 
+(2) what are the conservation targets (minimum proportion  of each conservation feature that need to be included int he reserve system)?
 
+The problem objective defines the overall goal of the conservation plan. This can be done a number of ways including using a minimum set objective which minimizes the cost of a reserve network, while ensuring all targets are met; maximum features objective, which fulfills as many targets as possible within a specific budget; maximum phylogenetic diversity objective which maximizes phylogenetic diversity of features within a specific budget; and more. For our analysis we will use the minimum set objective, which minimizes the cost of our reserve system, while meeting our conservation targets that we specify: `add_min_set_objective()`
 
+The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 20%  across all features, so we are saying the reserve system must include at least 20% of each species distribution and at least 20% of each critical habitat: `add_relative_targets(0.2)`
 
-## Step 5. Create conservation problem
+Now that we have decided those two things, we can construct the conservaiton problem:
 
+```{r}
+# define the problem using the cost, conservation features, objective, and targets
+prob_1 <- problem(cost = fishing_cost, features = features_stack) %>% 
+  add_min_set_objective() %>% 
+  add_relative_targets(0.20) %>% 
+  add_gurobi_solver()
 
+# print problem
+print(prob_1)
+```
 
 ## Step 6. Solve the problem 
+To solve the problem, we will run *prioritizr* using a solver or optimization software. The recommended and most common one used is Gurobi, which has special licenses available to academics at no cost. If you have not already downloaded this, please see the README.md for instructions. 
+```{r}
+# solve the problem
+sprob_1 <- solve(prob_1)
 
+# plot the solution to see what it looks like
+plot(prob_1,  main = c("20% Targets"))
+```
 
 
 # Variations to Analysis 
 
+## Changing Targets
+
+## Locking-in/Locking-out 
+
+## Boundary Penalty 
+
 ## Different Conservation Problems
 
 
-## Boundary Penalty 
+
 
 
 
