@@ -7,4 +7,78 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#load packages
+library(raster)
+library(tidyverse)
+library(sf)
+library(here)
+library(fasterize)
+library(stringr)
+library(janitor)
+library(fasterize)
+library(here)
+library(tmap)
 ```
+
+
+```{r}
+mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
+## check coordinate system
+st_crs(mz_eez_sf)
+
+mz_eez_rast <- raster(here("data", "mz_rast_id.tif"))
+plot(mz_eez_rast)
+```
+
+
+
+```{r}
+fishing <- read_csv(here("data", "GFW_20201231.csv"))
+
+## Convert the data frame to a simple features object (sf) to create a geometry for each id
+fishing_sf  <-  st_as_sf(fishing, coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326) %>% 
+  st_transform(., crs = st_crs(mz_eez_sf)) %>%  # transform to match the mz_eez crs
+  mutate(id=1:n())
+
+## check to make sure it matches
+st_crs(mz_eez_sf) == st_crs(fishing_sf)
+
+ggplot() +
+  geom_sf(data = mz_eez_sf) +
+  geom_sf(data = fishing_sf)
+```
+
+```{r}
+## check the class of sf
+class(fishing_sf)
+
+## change to a sp object
+fishing_sp <- as(fishing_sf, 'Spatial')
+
+## check the class to make sure it worked
+class(fishing_sp)
+
+## double check that this matches your RASTER file (which should be the same as the sf)
+crs(fishing_sp)
+crs(mz_eez_rast)
+
+## make a raster 
+fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "id") 
+
+## plot to see what it looks like
+plot(fishing_rast)
+
+```
+
+
+```{r}
+tmap_mode("view") # Set to interactive viewing
+tm_shape(fishing_rast) +
+  tm_basemap("Stamen.Terrain")+
+  tm_raster("layer",alpha=0.9, palette="viridis")+
+tm_shape(mz_eez_sf)+
+  tm_borders("black")
+```
+
+
+
