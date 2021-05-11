@@ -24,7 +24,7 @@ library(gurobi)
 # Session summary
 For this EcoDataScience session, we will cover some basics of working with  `prioritizr` R package to build and solve conservation planning problems using marine spatial data presented in gridded format (rasters) and vector format (line, point, polygons). We will go through the basic functionality and necessary inputs to create and solve a conservation planning problem, as well as some guidance on how you can custom-tailor this to the specific needs of different conservation planning exercises. For brevity, we will not go through all the pre-processing steps of cleaning up the raw spatial data we used for this analysis, but will include a separate set-up RMD that outlines what we did which you are welcome to check out on your own. 
 
-The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, & Rachel Rhodes in collaboration with Wildlife Conservation Society. The project aimed to idenfity priority areas to protect sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
+The analysis presented in this tutorial comes from a USCB Bren School of Environmental Science & Management master's project by Anna Abelman, Courtney Krone, Vanessa Rathbone, Rachel Rhodes & Erin Ristig in collaboration with Wildlife Conservation Society. The project aimed to identify priority areas to protect sharks and rays in Mozambique. For more information on the project you can visit: https://bren.ucsb.edu/projects/framework-designing-marine-protected-areas-sharks-and-rays-mozambique
 
 # Background
 ## What is Prioritizr?
@@ -45,9 +45,8 @@ The following parameters are required to conduct and solve a conservation planni
 
 5. Problem objective: defines the overall goal of the conservation plan & whether a specific property of the solution should be maximized or minimized (there are a number of different types of objectives that can be used which are described more later)
 
-
 ## Example data
-**Mozambique Exclusive Economic Zone:** 
+**Mozambique Exclusive Economic Zone (EEZ):** 
 
 **Species Data:** IUCN 2021. The IUCN Red List of Threatened Species. Version 2021-1. <https://www.iucnredlist.org>
 
