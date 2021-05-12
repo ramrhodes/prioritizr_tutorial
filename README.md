@@ -32,10 +32,21 @@ You'll need 6 inputs to run your prioritizr model, they include:
 
 
 ### Obtain Gurobi license 
-To run prioritizr you will need to use an optimization tool or algorithm solver. Gurobi is a widely used option and is available for free use under an academic license. Follow the tutorial on how to obtain a license and how to install the optimizer onto your MAC or PC. You won't be able to run prioritizr without an optimization tool installed on your machine. 
+To run prioritizr you will need to use an optimization tool or algorithm solver. Gurobi is a widely used option and is available for free use under an academic license. Follow the tutorial on how to obtain a license and how to install the optimizer onto your MAC or PC. You won't be able to run prioritizr without an optimization tool installed on your machine. More information can be found here: https://www.gurobi.com/
 
-More information can be found here: https://www.gurobi.com/
+Below is a step by step guide to obtaining a free Gurobi academic license & installation instructions:
 
+Step 1. Register on Gurobi website as Acedemic user: https://pages.gurobi.com/registration
+
+Step 2. Once logged in, navigate to https://www.gurobi.com/free-trial/
+
+Step 3. Click 'Academic Users: Request a Free Academic License'
+
+Step 4. Click 'Download Gurobi Optimizer' page
+
+Step 5. Download and install 'Gurobi Optimizer'
+
+Step 5. Navigate back to 'Download Gurobi Optimizer Page (https://www.gurobi.com/downloads/) and in the section **Request a License**, click 'Academic License & follow installation instrucrtions
 
 ### R Packages
 Here are some packages you may need to run a spatial prioritization:
