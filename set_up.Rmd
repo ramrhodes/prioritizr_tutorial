@@ -2,7 +2,15 @@
 title: 'EDS Workshop: Prioritizr - Setup'
 author: "Rachel Rhodes"
 date: "5/7/2021"
-output: html_document
+output: 
+  html_document:
+    code_folding: show
+    toc: true
+    toc_depth: 3
+    toc_float: yes
+    number_sections: false
+    theme: cerulean
+    highlight: haddock
 ---
 
 ```{r setup, include=FALSE}
@@ -20,19 +28,149 @@ library(here)
 library(tmap)
 ```
 
+## Planning Units: Mozambique's EEZ
 
 ```{r}
+## Grab Mozambique's EEZ shapefile
 mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
+
 ## check coordinate system
 st_crs(mz_eez_sf)
 
-mz_eez_rast <- raster(here("data", "mz_rast_id.tif"))
+## Use Moz EEZ to set extent for future rasters
+mz_ext <- raster::extent(mz_eez_sf)
+
+## Create raster with cell ids and clip to MZ EEZ raster
+mz_eez_rast <- raster::raster(x=mz_ext, crs=crs(mz_eez_sf), res=10000)
+
+## Assign cell values
+values(mz_eez_rast) <- 1:ncell(mz_eez_rast) 
+
+## Create data frame to check it out
+mz_eez_rast_df <- rasterToPoints(mz_eez_rast) %>%
+  as.data.frame()
+
+## Plot to make sure it looks good
 plot(mz_eez_rast)
+
+## Mask it to only include the EEZ
+mz_eez_rast <- mask(mz_eez_rast, mz_eez_sf)
+plot(mz_eez_rast)
+
+## Let's save this cell id raster as tif file - hashtagged this out for now since the tif is too big
+writeRaster(mz_eez_rast, here('final_rasters/mz_eez_rast.tif'), overwrite = TRUE)
 ```
 
 
+## Conservation Features
+
+### IUCN Species Distribution
+To download the IUCN Chronrichthyes spatial data locally, follow this [*link*] (https://www.iucnredlist.org/resources/spatial-data-download).
 
 ```{r}
+### grab iucn data from local computer
+iucn_path <- 'G:/group_project/data/updated_iucn'
+iucn_shape <- list.files(iucn_path, full.names = TRUE) 
+
+iucn_sf <- sf::read_sf(iucn_shape[9])
+
+### create a dataframe to look at the different variables and remove geometry to speed it up
+iucn_df <- iucn_sf %>%
+  as.data.frame() %>% 
+  select(-geometry)
+```
+
+```{r}
+# #create raster function by species name
+create_species_rast <- function(iucn_sf, species_name){
+  
+  species_df <- iucn_sf %>%
+    filter(binomial == species_name) %>% #filter by species name
+    st_transform(., crs = st_crs(mz_eez_sf)) #change crs to match mz_eez_sf
+
+  species_rast <- fasterize::fasterize(species_df, mz_eez_rast) %>% #create a species presence raster
+    mask(mz_eez_sf) #make everything outside the EEZ a NA
+
+  return(species_rast)
+  
+}
+```
+
+```{r}
+#Mobula kuhlii - shortfin devil ray
+devil_ray <- create_species_rast(iucn_sf, "Mobula kuhlii")
+plot(devil_ray)
+
+#Pristis pristis - largetooth sawfish
+sawfish <- create_species_rast(iucn_sf, "Pristis pristis")
+plot(sawfish)
+```
+
+### Habitats
+
+#### *SEAMOUNTS*
+```{r}
+## Grab seamount shapefile from the local computer
+seamount_path <- 'G:/group_project/Data/Habitats/seamounts'
+seamount_shape <- list.files(seamount_path, full.names = TRUE)
+
+## Load shapefile as simple feature
+seamount_sf <- sf::read_sf(seamount_shape[6]) 
+
+## Check the CRS of the seamount and compare to the mz rast
+st_crs(mz_eez_rast)
+st_crs(seamount_sf)
+
+## Let's create a rsater using the mz_rast with resolution of 10000 and mask tot the MZ EEZ
+seamounts <- fasterize::fasterize(seamount_sf, mz_eez_rast)%>%
+  mask(mz_eez_sf)
+
+## Plot to see what it looks like
+plot(seamounts)
+
+# Looks good lets save as a tif
+writeRaster(seamounts, here('final_rasters/seamounts.tif'), overwrite = TRUE)
+```
+
+#### *KNOLLS*
+```{r}
+## Grab knolls shapefile from the local computer
+knolls_path <- 'G:/group_project/Data/Habitats/knolls'
+knolls_shape <- list.files(knolls_path, full.names = TRUE)
+
+## Load shapefile as simple feature
+knolls_sf <- sf::read_sf(knolls_shape[6]) 
+
+## Check the CRS of the knolls sf
+st_crs(knolls_sf)
+
+## Let's create a rsater using the mz_rast with resolution of 10000 and mask tot the MZ EEZ
+knolls <- fasterize::fasterize(knolls_sf, mz_eez_rast)%>%
+  mask(mz_eez_sf)
+
+## Plot to see what it looks like
+plot(knolls)
+
+# Looks good - lets save as a tif
+writeRaster(knolls, here('final_rasters/knolls.tif'), overwrite = TRUE)
+```
+
+#### Create Raster Stack of Habitats and Species
+```{r}
+cfeatures_stack <- stack(devil_ray, sawfish, seamounts, knolls)
+
+plot(cfeatures_stack, main = paste("Feature", seq_len(nlayers(cfeatures_stack))),
+     nr = 2, box = FALSE, axes = FALSE)
+
+## Looks good, let's save as a multilayer feature tif
+writeRaster(cfeatures_stack, filename=here("final_rasters", "cfeatures_stack.tif"), options="INTERLEAVE=BAND", overwrite=TRUE)
+```
+
+
+## Cost Layer: Industrial Fishing Pressure
+
+```{r}
+## read in GFW industrial fishing pressure
 fishing <- read_csv(here("data", "GFW_20201231.csv"))
 
 ## Convert the data frame to a simple features object (sf) to create a geometry for each id
@@ -43,6 +181,7 @@ fishing_sf  <-  st_as_sf(fishing, coords = c("cell_ll_lon", "cell_ll_lat"), crs=
 ## check to make sure it matches
 st_crs(mz_eez_sf) == st_crs(fishing_sf)
 
+## let's plot it!
 ggplot() +
   geom_sf(data = mz_eez_sf) +
   geom_sf(data = fishing_sf)
@@ -68,9 +207,11 @@ fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "id")
 ## plot to see what it looks like
 plot(fishing_rast)
 
+# Looks good - lets save as a tif
+writeRaster(fishing_rast, here('final_rasters/fishing_rast.tif'), overwrite = TRUE)
 ```
 
-
+For fun... creating a interactive map!
 ```{r}
 tmap_mode("view") # Set to interactive viewing
 tm_shape(fishing_rast) +
