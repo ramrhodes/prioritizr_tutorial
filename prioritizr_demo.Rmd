@@ -2,7 +2,15 @@
 title: "EcoDataScience Workshop: Conservation Planning with Prioritizr"
 author: "Anna Abelman, Vanessa Rathbone, & Rachel Rhodes"
 date: "5/7/2021"
-output: html_document
+output: 
+  html_document:
+    code_folding: show
+    toc: true
+    toc_depth: 3
+    toc_float: yes
+    number_sections: false
+    theme: cerulean
+    highlight: haddock
 ---
 
 ```{r setup, include=FALSE}
