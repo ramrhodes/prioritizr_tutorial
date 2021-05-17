@@ -114,18 +114,17 @@ mz_pu <- mz_eez_rast
 For this exercise we will use spatial data of species distribution from IUCN and five critical habitats that are important for sharks and rays. For brevity, we will load in the species and critical habitat spatial data that has already been pre-processed (rasterized & projected in the same coordinate system) - if you would like to see how we did this you can check out the `set-up.RMD`. 
 
 ```{r}
-## Pull in species & habitat stack from 'cleaned_data' folder
+## Pull in species & habitat rasters from 'cleaned_data' folder
 devil_ray_rast <- raster(here("cleaned_data", "devil_ray.tif"))
 sawfish_rast <- raster(here("cleaned_data", "sawfish.tif"))
 reef_manta_rast <- raster(here("cleaned_data", "reef_manta.tif"))
 scalloped_hammerhead_rast <- raster(here("cleaned_data", "scalloped_hammerhead.tif"))
 dusky_shark_rast <- raster(here("cleaned_data", "dusky_shark.tif"))
-
 knolls_habitat <- raster(here("cleaned_data", "knolls.tif"))
-
 seamounts_habitat <- raster(here("cleaned_data", "seamounts.tif"))
 
-feature_stack <- stack(devil_ray_rast, sawfish_rast, reef_manta_rast, scalloped_hammerhead_rast, dusky_shark_rast)
+## Create a raster stack of all the conservation features
+feature_stack <- stack(devil_ray_rast, sawfish_rast, reef_manta_rast, scalloped_hammerhead_rast, dusky_shark_rast, knolls_habitat, seamounts_habitat)
 
 ## Plot to see what it looks like
 plot(feature_stack)
@@ -137,10 +136,19 @@ We will use fishing pressure as a surrogate for cost in our model which represen
 
 ```{r}
 ## Pull in the fishing pressure data from the 'cleaned_data' folder
-cost <- raster(here("cleaned_data", "fishing_rast.tif"))
+fishing_cost <- raster(here("cleaned_data", "fishing_rast.tif"))
 
 ## Plot to see what it looks like
 plot(cost)
+
+## TEST WILL DELETE
+mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
+area_cost <- raster(here("cleaned_data", "mz_eez_rast.tif"))
+
+values(area_cost) <- 0.5
+area_cost <- mask(area_cost, mz_rast)
+
+plot(area_cost)
 ```
 
 
@@ -175,7 +183,7 @@ To solve the problem, we will run *prioritizr* using a solver or optimization so
 sprob_1 <- solve(prob_1)
 
 # plot the solution to see what it looks like
-plot(sprob_1,  main = c("20% Targets"))
+plot(sprob_1,  main = c("10% Targets"))
 ```
 
 
