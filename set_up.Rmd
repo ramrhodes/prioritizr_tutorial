@@ -170,63 +170,75 @@ writeRaster(cfeatures_stack, filename=here("final_rasters", "cfeatures_stack.tif
 ## Cost Layer: Industrial Fishing Pressure
 
 ```{r}
-gfw_path <- 'G:/GFW'
+#path to Global Fishing Watch fishing pressure data
+gfw_path <- 'G:/GFW2'
 gfw_files <- list.files(gfw_path, full.names = TRUE)
 
-#gfw <- list(NA)
+#create a loop to read in data as csv 
+for (i in 1:length(gfw_files)) assign(gfw_files[i], read.csv(gfw_files[i]))
 
-# for (i in 1:seq_along(gfw_files)) {
-#   assign(paste("fishing", gfw_files[i],sep=""), read.csv(gfw_files[i]))
-#   
-#   fishing_sf[i]  <-  st_as_sf(gfw[i], coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326)# %>% 
-#   #st_transform(., crs = st_crs(mz_eez_sf)) %>%  # transform to match the mz_eez crs
-#   #mutate(id=1:n())
-# }
+#create a function that takes the csv and changes into raster
+fishing_rast <- function(csv, mz_eez_sf){
+  
+  ## Convert the data frame to a simple features object (sf) to create a geometry for each id
+  fishing_sf <-  st_as_sf(csv, coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326) %>% #make sf
+    st_transform(., crs = st_crs(mz_eez_sf)) %>% #make sure it is in correct crs
+    mutate(fishing_present = case_when(mmsi_present == NA~0, 
+                                       TRUE ~ as.numeric(.$mmsi_present))) %>% #make all NAs 0s (for now)
+    mutate(fishing_binary = case_when(fishing_present == 0 ~ 0.001, #Prioritzr doesn't like 0s
+                                       fishing_present >= 1~1)) %>% #making binary
+    mutate(id=1:n()) 
+  
+  ## check the class of sf
+  class(fishing_sf)
+  ## change to a sp object
+  fishing_sp <- as(fishing_sf, 'Spatial')
+  ## check the class to make sure it worked
+  class(fishing_sp)
+  ## double check that this matches your RASTER file (which should be the same as the sf)
+  crs(fishing_sp)
+  crs(mz_eez_rast)
+  ## make a raster 
+  fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "fishing_binary") %>% 
+    mask(mz_eez_sf)
 
-
-
-## Convert the data frame to a simple features object (sf) to create a geometry for each id
-fishing_sf  <-  st_as_sf(fishing, coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326) %>% 
-  st_transform(., crs = st_crs(mz_eez_sf)) %>%  # transform to match the mz_eez crs
-  mutate(id=1:n())
-
-## check to make sure it matches
-st_crs(mz_eez_sf) == st_crs(fishing_sf)
-
-## let's plot it!
-ggplot() +
-  geom_sf(data = mz_eez_sf) +
-  geom_sf(data = fishing_sf)
+return(fishing_rast)
+  
+}
 ```
 
 ```{r}
-## check the class of sf
-class(fishing_sf)
+#fishing presence on 27 Dec 2020
+fishing_27 <- fishing_rast(`G:/GFW2/2020-12-27.csv`, mz_eez_sf)
+plot(fishing_27)
 
-## change to a sp object
-fishing_sp <- as(fishing_sf, 'Spatial')
+#fishing presence on 28 Dec 2020
+fishing_28 <- fishing_rast(`G:/GFW2/2020-12-28.csv`, mz_eez_sf)
+plot(fishing_28)
 
-## check the class to make sure it worked
-class(fishing_sp)
+#fishing presence on 29 Dec 2020
+fishing_29 <- fishing_rast(`G:/GFW2/2020-12-29.csv`, mz_eez_sf)
+plot(fishing_29)
 
-## double check that this matches your RASTER file (which should be the same as the sf)
-crs(fishing_sp)
-crs(mz_eez_rast)
+#fishing presence on 30 Dec 2020
+fishing_30 <- fishing_rast(`G:/GFW2/2020-12-30.csv`, mz_eez_sf)
+plot(fishing_30)
 
-## make a raster 
-fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "id") 
+#fishing presence on 31 Dec 2020
+fishing_31 <- fishing_rast(`G:/GFW2/2020-12-31.csv`, mz_eez_sf)
+plot(fishing_31)
 
-## plot to see what it looks like
-plot(fishing_rast)
+#create a stack of all fishing pressure to be used in Prioritzr
+fishing_stack <- stack(fishing_27, fishing_28, fishing_29, fishing_30, fishing_31)
+plot(fishing_stack)
 
-# Looks good - lets save as a tif
-writeRaster(fishing_rast, here('final_rasters/fishing_rast.tif'), overwrite = TRUE)
 ```
+
 
 For fun... creating a interactive map!
 ```{r}
 tmap_mode("view") # Set to interactive viewing
-tm_shape(fishing_rast) +
+tm_shape(fishing_30) +
   tm_basemap("Stamen.Terrain")+
   tm_raster("layer",alpha=0.9, palette="viridis")+
 tm_shape(mz_eez_sf)+
