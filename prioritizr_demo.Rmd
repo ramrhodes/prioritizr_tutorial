@@ -115,10 +115,18 @@ For this exercise we will use spatial data of species distribution from IUCN and
 
 ```{r}
 ## Pull in species & habitat stack from 'cleaned_data' folder
-conservation_feat_stack <- brick(here("cleaned_data", "cfeatures_stack.tif"))
+mobula_kuklii <- raster(here("cleaned_data", "devil_ray.tif"))
+
+pristis_pristis <- raster(here("cleaned_data", "sawfish.tif"))
+
+knolls_habitat <- raster(here("cleaned_data", "knolls.tif"))
+
+seamounts_habitat <- raster(here("cleaned_data", "seamounts.tif"))
+
+feature_stack <- stack(mobula_kuklii, pristis_pristis, knolls_habitat, seamounts_habitat)
 
 ## Plot to see what it looks like
-plot(conservation_feat_stack)
+plot(feature_stack)
 ```
 
 
@@ -149,7 +157,7 @@ Now that we have decided those two things, we can construct the conservaiton pro
 
 ```{r}
 # define the problem using the cost, conservation features, objective, and targets
-prob_1 <- problem(cost = fishing_cost, features = features_stack) %>% 
+prob_1 <- problem(cost, feature_stack) %>% 
   add_min_set_objective() %>% 
   add_relative_targets(0.20) %>% 
   add_gurobi_solver()
