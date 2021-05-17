@@ -207,8 +207,7 @@ fishing_rast <- function(csv, mz_eez_sf){
   crs(fishing_sp)
   crs(mz_eez_rast)
   ## make a raster 
-  fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "mmsi_present") %>% 
-    mask(mz_eez_sf)
+  fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "mmsi_present")
 
 return(fishing_rast)
   
@@ -220,9 +219,15 @@ return(fishing_rast)
 fishing_27 <- fishing_rast(`G:/GFW2/2020-12-27.csv`, mz_eez_sf)
 plot(fishing_27)
 
+fishing_27_df <- fishing_27 %>% 
+  as.data.frame() 
+
 #fishing presence on 28 Dec 2020
 fishing_28 <- fishing_rast(`G:/GFW2/2020-12-28.csv`, mz_eez_sf)
 plot(fishing_28)
+
+fishing_28_df <- fishing_28 %>% 
+  as.data.frame()
 
 #fishing presence on 29 Dec 2020
 fishing_29 <- fishing_rast(`G:/GFW2/2020-12-29.csv`, mz_eez_sf)
@@ -240,14 +245,23 @@ plot(fishing_31)
 fishing_stack <- stack(fishing_27, fishing_28, fishing_29, fishing_30, fishing_31)
 plot(fishing_stack)
 
-fishing_stack_sum <- calc(fishing_stack, fun = sum)
+fishing_stack_df <- fishing_stack %>% 
+  as.data.frame()
+
+fishing_stack_sum <- calc(fishing_stack, fun = sum, na.rm = TRUE) %>% 
+  mask(mz_eez_sf)
 plot(fishing_stack_sum)
 
-fishing_stack_sum_rescaled <- fishing_stack_sum/maxValue(fishing_stack_sum)
-plot(fishing_stack_sum_rescaled)
+fishing_sum_df <- fishing_stack_sum %>% 
+  as.data.frame()
+
+fishing_stack_sum[values(fishing_stack_sum == 0)] <- 0.001
+
+fishing_sum_df <- fishing_stack_sum %>% 
+  as.data.frame() 
 
 ## Looks good, let's save as a multilayer feature tif
-writeRaster(fishing_stack_sum_rescaled, filename=here("cleaned_data", "fishing_stack.tif"), overwrite=TRUE)
+writeRaster(fishing_stack_sum, filename=here("cleaned_data", "fishing_stack.tif"), overwrite=TRUE)
 
 ```
 
