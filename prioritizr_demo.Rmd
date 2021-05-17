@@ -139,7 +139,7 @@ We will use fishing pressure as a surrogate for cost in our model which represen
 fishing_cost <- raster(here("cleaned_data", "fishing_rast.tif"))
 
 ## Plot to see what it looks like
-plot(cost)
+plot(fishing_cost)
 
 ## TEST WILL DELETE
 mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
@@ -167,7 +167,7 @@ Now that we have decided those two things, we can construct the conservaiton pro
 
 ```{r}
 # define the problem using the cost, conservation features, objective, and targets
-prob_1 <- problem(cost, feature_stack) %>% 
+prob_1 <- problem(fishing_cost, feature_stack) %>% 
   add_min_set_objective() %>% 
   add_relative_targets(0.1) %>% 
   add_gurobi_solver(gap = 0.01)
@@ -176,7 +176,7 @@ prob_1 <- problem(cost, feature_stack) %>%
 print(prob_1)
 ```
 
-## Step 6. Solve the problem 
+## Step 5. Solve the problem 
 To solve the problem, we will run *prioritizr* using a solver or optimization software. The recommended and most common one used is Gurobi, which has special licenses available to academics at no cost. If you have not already downloaded this, please see the README.md for instructions. 
 ```{r}
 # solve the problem
@@ -186,14 +186,86 @@ sprob_1 <- solve(prob_1)
 plot(sprob_1,  main = c("10% Targets"))
 ```
 
+#----------------------------#
+# Variations to the Analysis 
+#----------------------------#
 
-# Variations to Analysis 
+Now that you've defined your baseline problem, you can adjust your model with different variations. Here, we'll walk through a few of those variables you can add. 
 
-## Changing Targets
+## Changing Targets 
+```{r}
 
-## Locking-in/Locking-out 
+# Let's change our prob_1 target to include 30% of the conservation features, instead of 10%
 
-## Boundary Penalty 
+## Baseline -30% target
+prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+  add_min_set_objective() %>%
+  add_relative_targets(0.3)
+
+## Solve problem
+sprob_area_30 <- solve(prob_area_30)
+
+## Plot the solution to see what it looks like
+plot(sprob_area_30,  main = c("Area- 30% Targets"))
+
+## Save as tif
+# writeRaster(sprob_area_30, here("final_results", "scenario_1_area",  "sprob_area_30_6hr_blm0.tif"), overwrite = TRUE)
+```
+
+## Locking-in/Locking-out
+```{r}
+# Here, we lock-in existing Marine Protected Areas
+
+### read in existing mpas raster
+exist_mpas <- raster(here("set_up", "final_rasters", "planning_unit", "exist_mpa.tif"))
+
+### plot to make sure it looks okay
+plot(exist_mpas)
+
+## Run model with locked-in constraints: 
+prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+  add_min_set_objective() %>%
+  add_relative_targets(0.3) %>%
+  add_locked_in_constraints(exist_mpas)
+
+## Solve problem
+sprob_area_30 <- solve(prob_area_30)
+
+## Plot the solution to see what it looks like
+plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
+
+```
+
+### Setting some global model parameters
+```{r}
+
+# Here, we'll be setting: 
+# -the gap (want the gap to be as small as possible) 
+# -time limit (how long your model will run)
+# -efficient boundary penalty (optimal penatly to reduce fragementation within your reserves)
+
+## If you decide to change the gap, time-limit or boundary penalty value, change it here and rerun the subsequent model runs
+
+gap <- 0.01
+time_limit <- 21600
+bp <- 0.000001
+
+# Run the model with all of the new model parameters:
+prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+  add_min_set_objective() %>%
+  add_relative_targets(0.3) %>%
+  add_locked_in_constraints(exist_mpas) %>%
+  add_gurobi_solver(gap = gap, time_limit = time_limit) %>% 
+  add_boundary_penalties(bp)
+
+## Solve problem
+sprob_area_30 <- solve(prob_area_30)
+
+## Plot the solution to see what it looks like
+plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
+
+```
+
 
 ## Different Conservation Problems
 
