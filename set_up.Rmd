@@ -170,8 +170,20 @@ writeRaster(cfeatures_stack, filename=here("final_rasters", "cfeatures_stack.tif
 ## Cost Layer: Industrial Fishing Pressure
 
 ```{r}
-## read in GFW industrial fishing pressure
-fishing <- read_csv(here("data", "GFW_20201231.csv"))
+gfw_path <- 'G:/GFW'
+gfw_files <- list.files(gfw_path, full.names = TRUE)
+
+#gfw <- list(NA)
+
+# for (i in 1:seq_along(gfw_files)) {
+#   assign(paste("fishing", gfw_files[i],sep=""), read.csv(gfw_files[i]))
+#   
+#   fishing_sf[i]  <-  st_as_sf(gfw[i], coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326)# %>% 
+#   #st_transform(., crs = st_crs(mz_eez_sf)) %>%  # transform to match the mz_eez crs
+#   #mutate(id=1:n())
+# }
+
+
 
 ## Convert the data frame to a simple features object (sf) to create a geometry for each id
 fishing_sf  <-  st_as_sf(fishing, coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326) %>% 
