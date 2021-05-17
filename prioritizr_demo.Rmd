@@ -26,7 +26,7 @@ library(stringr)
 library(janitor)
 library(prioritizr)
 library(rgdal)
-library(gurobi)
+#library(gurobi)
 ```
 
 # Session summary
@@ -79,7 +79,34 @@ The size of the planning unit can impact the outcomes of the reserve design, so 
 important to carefully consider the spatial scale of the planning unit - for this exercise we will rasterize the project area to produce a grid of cells at 10km^2 resolution. 
 
 ```{r}
+## Grab Mozambique's EEZ shapefile
+mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
 
+## check coordinate system
+st_crs(mz_eez_sf)
+
+## Use Moz EEZ to set extent for future rasters
+mz_ext <- raster::extent(mz_eez_sf)
+
+## To create planning units, create raster with cell ids with a resolution of 10,000 km and clip to MZ EEZ raster
+mz_eez_rast <- raster::raster(x=mz_ext, crs=crs(mz_eez_sf), res=10000)
+
+## Assign cell values
+values(mz_eez_rast) <- 1:ncell(mz_eez_rast) 
+
+## Create data frame to check it out
+mz_eez_rast_df <- rasterToPoints(mz_eez_rast) %>%
+  as.data.frame()
+
+## Plot to make sure it looks good
+plot(mz_eez_rast)
+
+## Mask it to only include the EEZ
+mz_eez_rast <- mask(mz_eez_rast, mz_eez_sf)
+plot(mz_eez_rast)
+
+## Store as object called pu for planning unit
+mz_pu <- mz_eez_rast
 ```
 
 
@@ -87,7 +114,11 @@ important to carefully consider the spatial scale of the planning unit - for thi
 For this exercise we will use spatial data of species distribution from IUCN and five critical habitats that are important for sharks and rays. For brevity, we will load in the species and critical habitat spatial data that has already been pre-processed (rasterized & projected in the same coordinate system) - if you would like to see how we did this you can check out the `set-up.RMD`. 
 
 ```{r}
+## Pull in species & habitat stack from 'cleaned_data' folder
+conservation_feat_stack <- brick(here("cleaned_data", "cfeatures_stack.tif"))
 
+## Plot to see what it looks like
+plot(conservation_feat_stack)
 ```
 
 
@@ -95,7 +126,11 @@ For this exercise we will use spatial data of species distribution from IUCN and
 We will use fishing pressure as a surrogate for cost in our model which represents the cost of lost fishing opportunity. This will prioritize areas with the least fishing activity that overlap with areas that are critical for sharks and rays - this will show us the reserve designs that have the least impact on fishers (alternatively you could create an inverse of this cost layer to prioritize areas with the most fishing activity that overlap with critical areas for sharks and rays which would have the most benefit for sharks and rays, but greater impacts on fishers).
 
 ```{r}
+## Pull in the fishing pressure data from the 'cleaned_data' folder
+cost <- raster(here("cleaned_data", "fishing_rast.tif"))
 
+## Plot to see what it looks like
+plot(cost)
 ```
 
 

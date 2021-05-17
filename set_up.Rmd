@@ -58,7 +58,7 @@ mz_eez_rast <- mask(mz_eez_rast, mz_eez_sf)
 plot(mz_eez_rast)
 
 ## Let's save this cell id raster as tif file - hashtagged this out for now since the tif is too big
-writeRaster(mz_eez_rast, here('final_rasters/mz_eez_rast.tif'), overwrite = TRUE)
+writeRaster(mz_eez_rast, here('cleaned_data/mz_eez_rast.tif'), overwrite = TRUE)
 ```
 
 
@@ -129,7 +129,7 @@ seamounts <- fasterize::fasterize(seamount_sf, mz_eez_rast)%>%
 plot(seamounts)
 
 # Looks good lets save as a tif
-writeRaster(seamounts, here('final_rasters/seamounts.tif'), overwrite = TRUE)
+writeRaster(seamounts, here('cleaned_data/seamounts.tif'), overwrite = TRUE)
 ```
 
 #### *KNOLLS*
@@ -152,7 +152,7 @@ knolls <- fasterize::fasterize(knolls_sf, mz_eez_rast)%>%
 plot(knolls)
 
 # Looks good - lets save as a tif
-writeRaster(knolls, here('final_rasters/knolls.tif'), overwrite = TRUE)
+writeRaster(knolls, here('cleaned_data/knolls.tif'), overwrite = TRUE)
 ```
 
 #### Create Raster Stack of Habitats and Species
