@@ -110,6 +110,13 @@ plot(sawfish)
 
 # Looks good lets save as a tif
 writeRaster(sawfish, here('cleaned_data/sawfish.tif'), overwrite = TRUE)
+
+#Pristis pristis - largetooth sawfish
+scalloped_hammerhead <- create_species_rast(iucn_sf, "Sphyrna lewini")
+plot(scalloped_hammerhead)
+
+# Looks good lets save as a tif
+writeRaster(scalloped_hammerhead, here('cleaned_data/scalloped_hammerhead.tif'), overwrite = TRUE)
 ```
 
 ### Habitats

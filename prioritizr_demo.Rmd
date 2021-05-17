@@ -115,15 +115,17 @@ For this exercise we will use spatial data of species distribution from IUCN and
 
 ```{r}
 ## Pull in species & habitat stack from 'cleaned_data' folder
-mobula_kuklii <- raster(here("cleaned_data", "devil_ray.tif"))
-
-pristis_pristis <- raster(here("cleaned_data", "sawfish.tif"))
+devil_ray_rast <- raster(here("cleaned_data", "devil_ray.tif"))
+sawfish_rast <- raster(here("cleaned_data", "sawfish.tif"))
+reef_manta_rast <- raster(here("cleaned_data", "reef_manta.tif"))
+scalloped_hammerhead_rast <- raster(here("cleaned_data", "scalloped_hammerhead.tif"))
+dusky_shark_rast <- raster(here("cleaned_data", "dusky_shark.tif"))
 
 knolls_habitat <- raster(here("cleaned_data", "knolls.tif"))
 
 seamounts_habitat <- raster(here("cleaned_data", "seamounts.tif"))
 
-feature_stack <- stack(mobula_kuklii, pristis_pristis)
+feature_stack <- stack(devil_ray_rast, sawfish_rast, reef_manta_rast, scalloped_hammerhead_rast, dusky_shark_rast)
 
 ## Plot to see what it looks like
 plot(feature_stack)
@@ -159,7 +161,7 @@ Now that we have decided those two things, we can construct the conservaiton pro
 # define the problem using the cost, conservation features, objective, and targets
 prob_1 <- problem(cost, feature_stack) %>% 
   add_min_set_objective() %>% 
-  add_relative_targets(0.05) %>% 
+  add_relative_targets(0.1) %>% 
   add_gurobi_solver(gap = 0.01)
 
 # print problem
@@ -173,7 +175,7 @@ To solve the problem, we will run *prioritizr* using a solver or optimization so
 sprob_1 <- solve(prob_1)
 
 # plot the solution to see what it looks like
-plot(prob_1,  main = c("20% Targets"))
+plot(sprob_1,  main = c("20% Targets"))
 ```
 
 
