@@ -68,7 +68,8 @@ distribution of seamounts based on 30-second bathymetry data. Deep Sea Research 
 
 
 **Fishing Pressure:** 
-
+Global Fishing Watch
+D.A. Kroodsma, J. Mayorga, T. Hochberg, N.A. Miller, K. Boerder, F. Ferretti, A. Wilson, B. Bergman, T.D. White, B.A. Block, P. Woods, B. Sullivan, C. Costello, and B. Worm. "Tracking the global footprint of fisheries." Science 361.6378 (2018).
 
 # Basic Analysis
 
@@ -144,13 +145,13 @@ plot(fishing_cost)
 fishing_cost_df <- as.data.frame(fishing_cost)
 
 ## TEST WILL DELETE
-mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
-area_cost <- raster(here("cleaned_data", "mz_eez_rast.tif"))
-
-values(area_cost) <- 0.5
-area_cost <- mask(area_cost, mz_rast)
-
-plot(area_cost)
+# mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
+# area_cost <- raster(here("cleaned_data", "mz_eez_rast.tif"))
+# 
+# values(area_cost) <- 0.5
+# area_cost <- mask(area_cost, mz_rast)
+# 
+# plot(area_cost)
 ```
 
 
@@ -200,7 +201,7 @@ Now that you've defined your baseline problem, you can adjust your model with di
 # Let's change our prob_1 target to include 30% of the conservation features, instead of 10%
 
 ## Baseline -30% target
-prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3)
 
@@ -219,13 +220,15 @@ plot(sprob_area_30,  main = c("Area- 30% Targets"))
 # Here, we lock-in existing Marine Protected Areas
 
 ### read in existing mpas raster
-exist_mpas <- raster(here("set_up", "final_rasters", "planning_unit", "exist_mpa.tif"))
+exist_mpas <- raster(here("cleaned_data", "mpa_rast.tif"))
+
+#exist_mpas <- setExtent(exist_mpas, ext=extent(mz_eez_rast), keepres=FALSE, snap=FALSE)                     
 
 ### plot to make sure it looks okay
 plot(exist_mpas)
 
 ## Run model with locked-in constraints: 
-prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3) %>%
   add_locked_in_constraints(exist_mpas)
@@ -249,11 +252,11 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
 ## If you decide to change the gap, time-limit or boundary penalty value, change it here and rerun the subsequent model runs
 
 gap <- 0.01
-time_limit <- 21600
+time_limit <- 2160
 bp <- 0.000001
 
 # Run the model with all of the new model parameters:
-prob_area_30 <- problem(fishing_cost, features = features_stack) %>%
+prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3) %>%
   add_locked_in_constraints(exist_mpas) %>%

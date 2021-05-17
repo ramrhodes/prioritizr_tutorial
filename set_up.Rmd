@@ -1,6 +1,6 @@
 ---
 title: 'EDS Workshop: Prioritizr - Setup'
-author: "Rachel Rhodes"
+author: "Anna Abelman, Vanessa Rathbone, & Rachel Rhodes"
 date: "5/7/2021"
 output: 
   html_document:
@@ -28,8 +28,9 @@ library(here)
 library(tmap)
 ```
 
-## Planning Units: Mozambique's EEZ
+## Planning Units 
 
+#### **Mozambique's EEZ**
 ```{r}
 ## Grab Mozambique's EEZ shapefile
 mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
@@ -61,12 +62,45 @@ plot(mz_eez_rast)
 writeRaster(mz_eez_rast, here('cleaned_data/mz_eez_rast.tif'), overwrite = TRUE)
 ```
 
+#### **Existing MPAs**
+```{r}
+## Grab protected area shapefile from computer
+exist_mpa_path <- 'G:/group_project/data/existing_mpas'
+mpa_shape <- list.files(exist_mpa_path, full.names = TRUE)
+
+## Read in the shapefile as a simple feature
+mpa_sf <- sf::read_sf(mpa_shape[7]) 
+
+## Check the CRS of the simple feature to make sure it matches the Mozambique Raster 
+st_crs(mpa_sf)
+
+## CRS matches so lets make a raster using the mz_rast_id to set the extent
+mpa_rast <- fasterize::fasterize(mpa_sf, mz_eez_rast)
+
+## Double check the CRS again 
+crs(mpa_rast)
+
+## Plot to make sure it looks good, note this shapefile includes all terrestrial protected areas as well so we need to clip it to just include those in the water (the EEZ)
+plot(mpa_rast)
+
+## Mask the rater to the EEZ 
+mpa_rast <- mask(mpa_rast, mz_eez_sf) 
+
+## Double check CRS of new raster & plot to make sure it looks good
+crs(mpa_rast)
+plot(mpa_rast)
+
+## Let's save this cell id raster as tif file - hashtagged this out for now since the tif is too big
+writeRaster(mpa_rast, here('cleaned_data/mpa_rast.tif'), overwrite = TRUE)
+```
+
 
 ## Conservation Features
 
-### IUCN Species Distribution
-To download the IUCN Chronrichthyes spatial data locally, follow this [*link*] (https://www.iucnredlist.org/resources/spatial-data-download).
+### **Species**
 
+#### **IUCN Species Distribution**
+To download the IUCN Chronrichthyes spatial data locally, follow this [*link*](https://www.iucnredlist.org/resources/spatial-data-download).
 ```{r}
 ### grab iucn data from local computer
 iucn_path <- 'G:/group_project/data/updated_iucn'
@@ -81,7 +115,7 @@ iucn_df <- iucn_sf %>%
 ```
 
 ```{r}
-# #create raster function by species name
+# create raster function by species name
 create_species_rast <- function(iucn_sf, species_name){
   
   species_df <- iucn_sf %>%
@@ -97,7 +131,7 @@ create_species_rast <- function(iucn_sf, species_name){
 ```
 
 ```{r}
-#Mobula kuhlii - shortfin devil ray
+# Mobula kuhlii - shortfin devil ray
 devil_ray <- create_species_rast(iucn_sf, "Mobula kuhlii")
 plot(devil_ray)
 
@@ -119,9 +153,9 @@ plot(scalloped_hammerhead)
 writeRaster(scalloped_hammerhead, here('cleaned_data/scalloped_hammerhead.tif'), overwrite = TRUE)
 ```
 
-### Habitats
+### **Habitats**
 
-#### *SEAMOUNTS*
+#### **SEAMOUNTS**
 ```{r}
 ## Grab seamount shapefile from the local computer
 seamount_path <- 'G:/group_project/Data/Habitats/seamounts'
@@ -145,7 +179,7 @@ plot(seamounts)
 writeRaster(seamounts, here('cleaned_data/seamounts.tif'), overwrite = TRUE)
 ```
 
-#### *KNOLLS*
+#### **KNOLLS**
 ```{r}
 ## Grab knolls shapefile from the local computer
 knolls_path <- 'G:/group_project/Data/Habitats/knolls'
@@ -180,7 +214,9 @@ writeRaster(cfeatures_stack, filename=here("cleaned_data", "cfeatures_stack.tif"
 ```
 
 
-## Cost Layer: Industrial Fishing Pressure
+## Cost Layer
+
+#### **Industrial Fishing Pressure from Global Fishing Watch**
 
 ```{r}
 #path to Global Fishing Watch fishing pressure data
@@ -199,13 +235,17 @@ fishing_rast <- function(csv, mz_eez_sf){
   
   ## check the class of sf
   class(fishing_sf)
+  
   ## change to a sp object
   fishing_sp <- as(fishing_sf, 'Spatial')
+  
   ## check the class to make sure it worked
   class(fishing_sp)
+  
   ## double check that this matches your RASTER file (which should be the same as the sf)
   crs(fishing_sp)
   crs(mz_eez_rast)
+  
   ## make a raster 
   fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "mmsi_present")
 
@@ -214,20 +254,19 @@ return(fishing_rast)
 }
 ```
 
+#### **Fishing Presence from December 27-31, 2020**
 ```{r}
 #fishing presence on 27 Dec 2020
 fishing_27 <- fishing_rast(`G:/GFW2/2020-12-27.csv`, mz_eez_sf)
 plot(fishing_27)
 
+#to check what the data looks like
 fishing_27_df <- fishing_27 %>% 
   as.data.frame() 
 
 #fishing presence on 28 Dec 2020
 fishing_28 <- fishing_rast(`G:/GFW2/2020-12-28.csv`, mz_eez_sf)
 plot(fishing_28)
-
-fishing_28_df <- fishing_28 %>% 
-  as.data.frame()
 
 #fishing presence on 29 Dec 2020
 fishing_29 <- fishing_rast(`G:/GFW2/2020-12-29.csv`, mz_eez_sf)
@@ -245,36 +284,39 @@ plot(fishing_31)
 fishing_stack <- stack(fishing_27, fishing_28, fishing_29, fishing_30, fishing_31)
 plot(fishing_stack)
 
-fishing_stack_df <- fishing_stack %>% 
-  as.data.frame()
+```
 
+```{r}
+#adding all the rasters together to get a single raster
 fishing_stack_sum <- calc(fishing_stack, fun = sum, na.rm = TRUE) %>% 
-  mask(mz_eez_sf)
+  mask(mz_eez_sf)#add a mask so only the values in the project area are shown
+
+#let's plot it
 plot(fishing_stack_sum)
 
+#check it out just to double check 
 fishing_sum_df <- fishing_stack_sum %>% 
   as.data.frame()
 
+#Prioritzr does NOT like 0s, so we changed all values from 0 to 0.001
 fishing_stack_sum[values(fishing_stack_sum == 0)] <- 0.001
 
+#check it once last time!
 fishing_sum_df <- fishing_stack_sum %>% 
   as.data.frame() 
 
 ## Looks good, let's save as a multilayer feature tif
 writeRaster(fishing_stack_sum, filename=here("cleaned_data", "fishing_stack.tif"), overwrite=TRUE)
-
 ```
 
 
-For fun... creating a interactive map!
+
+**For fun... creating a interactive map!**
 ```{r}
 tmap_mode("view") # Set to interactive viewing
-tm_shape(fishing_30) +
+tm_shape(fishing_stack_sum) +
   tm_basemap("Stamen.Terrain")+
-  tm_raster("layer",alpha=0.9, palette="viridis")+
+  tm_raster("layer",alpha=0.9, palette = "viridis", breaks = c(0,1,2,5,25), title = "Industrial Fishing")+
 tm_shape(mz_eez_sf)+
   tm_borders("black")
 ```
-
-
-
