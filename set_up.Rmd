@@ -176,7 +176,7 @@ plot(cfeatures_stack, main = paste("Feature", seq_len(nlayers(cfeatures_stack)))
      nr = 2, box = FALSE, axes = FALSE)
 
 ## Looks good, let's save as a multilayer feature tif
-writeRaster(cfeatures_stack, filename=here("final_rasters", "cfeatures_stack.tif"), options="INTERLEAVE=BAND", overwrite=TRUE)
+writeRaster(cfeatures_stack, filename=here("cleaned_data", "cfeatures_stack.tif"), options="INTERLEAVE=BAND", overwrite=TRUE)
 ```
 
 
@@ -195,12 +195,7 @@ fishing_rast <- function(csv, mz_eez_sf){
   
   ## Convert the data frame to a simple features object (sf) to create a geometry for each id
   fishing_sf <-  st_as_sf(csv, coords = c("cell_ll_lon", "cell_ll_lat"), crs= 4326) %>% #make sf
-    st_transform(., crs = st_crs(mz_eez_sf)) %>% #make sure it is in correct crs
-    mutate(fishing_present = case_when(mmsi_present == NA~0, 
-                                       TRUE ~ as.numeric(.$mmsi_present))) %>% #make all NAs 0s (for now)
-    mutate(fishing_binary = case_when(fishing_present == 0 ~ 0.001, #Prioritzr doesn't like 0s
-                                       fishing_present >= 1~1)) %>% #making binary
-    mutate(id=1:n()) 
+    st_transform(., crs = st_crs(mz_eez_sf))
   
   ## check the class of sf
   class(fishing_sf)
@@ -212,7 +207,7 @@ fishing_rast <- function(csv, mz_eez_sf){
   crs(fishing_sp)
   crs(mz_eez_rast)
   ## make a raster 
-  fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "fishing_binary") %>% 
+  fishing_rast <- raster::rasterize(fishing_sp, mz_eez_rast, field = "mmsi_present") %>% 
     mask(mz_eez_sf)
 
 return(fishing_rast)
@@ -244,6 +239,15 @@ plot(fishing_31)
 #create a stack of all fishing pressure to be used in Prioritzr
 fishing_stack <- stack(fishing_27, fishing_28, fishing_29, fishing_30, fishing_31)
 plot(fishing_stack)
+
+fishing_stack_sum <- calc(fishing_stack, fun = sum)
+plot(fishing_stack_sum)
+
+fishing_stack_sum_rescaled <- fishing_stack_sum/maxValue(fishing_stack_sum)
+plot(fishing_stack_sum_rescaled)
+
+## Looks good, let's save as a multilayer feature tif
+writeRaster(fishing_stack_sum_rescaled, filename=here("cleaned_data", "fishing_stack.tif"), overwrite=TRUE)
 
 ```
 

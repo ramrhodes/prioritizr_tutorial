@@ -26,7 +26,7 @@ library(stringr)
 library(janitor)
 library(prioritizr)
 library(rgdal)
-#library(gurobi)
+library(gurobi)
 ```
 
 # Session summary
@@ -136,10 +136,12 @@ We will use fishing pressure as a surrogate for cost in our model which represen
 
 ```{r}
 ## Pull in the fishing pressure data from the 'cleaned_data' folder
-fishing_cost <- raster(here("cleaned_data", "fishing_rast.tif"))
+fishing_cost <- raster(here("cleaned_data", "fishing_stack.tif"))
 
 ## Plot to see what it looks like
 plot(fishing_cost)
+
+fishing_cost_df <- as.data.frame(fishing_cost)
 
 ## TEST WILL DELETE
 mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
@@ -170,7 +172,7 @@ Now that we have decided those two things, we can construct the conservaiton pro
 prob_1 <- problem(fishing_cost, feature_stack) %>% 
   add_min_set_objective() %>% 
   add_relative_targets(0.1) %>% 
-  add_gurobi_solver(gap = 0.01)
+  add_gurobi_solver(gap = 0.01, time_limit = 2100)
 
 # print problem
 print(prob_1)
