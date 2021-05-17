@@ -101,9 +101,15 @@ create_species_rast <- function(iucn_sf, species_name){
 devil_ray <- create_species_rast(iucn_sf, "Mobula kuhlii")
 plot(devil_ray)
 
+# Looks good lets save as a tif
+writeRaster(devil_ray, here('cleaned_data/devil_ray.tif'), overwrite = TRUE)
+
 #Pristis pristis - largetooth sawfish
 sawfish <- create_species_rast(iucn_sf, "Pristis pristis")
 plot(sawfish)
+
+# Looks good lets save as a tif
+writeRaster(sawfish, here('cleaned_data/sawfish.tif'), overwrite = TRUE)
 ```
 
 ### Habitats

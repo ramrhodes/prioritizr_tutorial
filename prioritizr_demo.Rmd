@@ -123,7 +123,7 @@ knolls_habitat <- raster(here("cleaned_data", "knolls.tif"))
 
 seamounts_habitat <- raster(here("cleaned_data", "seamounts.tif"))
 
-feature_stack <- stack(mobula_kuklii, pristis_pristis, knolls_habitat, seamounts_habitat)
+feature_stack <- stack(mobula_kuklii, pristis_pristis)
 
 ## Plot to see what it looks like
 plot(feature_stack)
@@ -159,8 +159,8 @@ Now that we have decided those two things, we can construct the conservaiton pro
 # define the problem using the cost, conservation features, objective, and targets
 prob_1 <- problem(cost, feature_stack) %>% 
   add_min_set_objective() %>% 
-  add_relative_targets(0.20) %>% 
-  add_gurobi_solver()
+  add_relative_targets(0.05) %>% 
+  add_gurobi_solver(gap = 0.01)
 
 # print problem
 print(prob_1)
