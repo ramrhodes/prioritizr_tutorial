@@ -252,7 +252,7 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
 ## If you decide to change the gap, time-limit or boundary penalty value, change it here and rerun the subsequent model runs
 
 gap <- 0.01
-time_limit <- 2160
+time_limit <- 120
 bp <- 0.000001
 
 # Run the model with all of the new model parameters:
