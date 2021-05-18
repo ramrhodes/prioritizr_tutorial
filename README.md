@@ -9,7 +9,7 @@
 
 ------------------
 ## The goal
-This tutorial provides a short example to get you familiar with the prioritizr R package which can be used to build and solve conservation planning problems. This tool can be used to produce a resproducible spatial prioritization model in R. Similar to the spatial prioritization tool Marxan, the underlying objective of prioritizr is to design reserves (or areas) that achieve a conservation goal while minimizing costs. 
+This tutorial provides a short example to get you familiar with the prioritizr R package which can be used to build and solve conservation planning problems. This tool can be used to produce a reproducible spatial prioritization model in R. Similar to the spatial prioritization tool Marxan, the underlying objective of prioritizr is to design reserves (or areas) that achieve a conservation goal while minimizing costs. 
 
 More information can be found here: https://prioritizr.net/
 
