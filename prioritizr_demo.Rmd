@@ -59,10 +59,6 @@ The following parameters are required to conduct and solve a conservation planni
 IUCN 2021. The IUCN Red List of Threatened Species. Version 2021-1. <https://www.iucnredlist.org>
 
 **Habitat:** 
-Coral & Seagrass: Allen Coral Atlas maps, bathymetry and map statistics are © 2018-2021 Allen Coral Atlas Partnership and Vulcan, Inc. and licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-
-Mangroves: Giri C, Ochieng E, Tieszen LL, Zhu Z, Singh A, Loveland T, Masek J, Duke N (2011). Status and distribution of mangrove forests of the world using earth observation satellite data (version 1.4, updated by UNEP-WCMC). Global Ecology and Biogeography 20: 154-159. Data DOI: https://doi.org/10.34892/1411-w728 
-
 Seamount & Knolls: Yesson C, Clark MR, Taylor M, Rogers AD (2011). The global 
 distribution of seamounts based on 30-second bathymetry data. Deep Sea Research Part I: Oceanographic Research Papers 58: 442-453. DOI: http://dx.doi.org/10.1016/j.dsr.2011.02.004. Data DOI: http://doi.pangaea.de/10.1594/PANGAEA.757564
 
@@ -242,13 +238,51 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
 
 ```
 
-## Different Conservation Problems
 
+##Summary stats
+```{r}
+# To evaluate the performance of the solution, we can calculate summary statistics.
+
+# Run the model with all of the new model parameters:
+prob_30 <- problem(fishing_cost, features = feature_stack) %>%
+  add_min_set_objective() %>%
+  add_relative_targets(0.3) %>%
+  add_locked_in_constraints(exist_mpas) %>%
+  add_gurobi_solver(gap = gap, time_limit = time_limit) %>% 
+  add_boundary_penalties(bp)
+
+## Solve problem
+sprob_30 <- solve(prob_30)
+
+# Now calculate the summary statistics
+eval_target_coverage_summary(prob_30, sprob_30)
+
+## Plot the solution to see what it looks like
+plot(sprob_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
+
+
+```
+
+
+## Other Considerations (NEW TO prioritizr)
 #For Contiguious Reserve Designs use `add_contiguity_constraints`
-This solution is even better then the previous solution. However, we are not finished yet. This solution does not maintain connectivity between reserves, and so species may have limited capacity to disperse throughout the solution. To avoid this, we can add contiguity constraints (add_contiguity_constraints)
+To maintain connectivity and dispersal capacity between reserves, we can add contiguity constraints.
 
 #For areas that MUST be considered in the design use `irreplaceability`:
-Now let’s explore which planning units selected in the prioritization are most important for meeting our targets as cost-effectively as possible. To achieve this, we will calculate importance (irreplaceability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Furthermore, planning units with infinite scores are irreplaceable—it is impossible to meet our targets without protecting these planning units. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
+Some areas in your design might have be inluded in your design. These areas can now be calculated as "irreplaceable". The `irreplaceability()` function will calculate importance (irreplaceability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
+
+## Different Conservation Problems
+
+Can find more details here: https://cran.r-project.org/web/packages/prioritizr/vignettes/prioritizr.html#initialize-a-problem
+
+*Minimum set objective:* Minimize the cost of the solution whilst ensuring that all targets are met.
+*Maximum features objective:* Fulfill as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
+*Minimum shortfall objective:* Minimize the overall (weighted sum) shortfall for as many targets as possible while ensuring that the cost of the solution does not exceed a budget.
+*Minimum largest shortfall objective:* Minimize the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
+*Maximum phylogenetic diversity objective:* Maximize the phylogenetic diversity of the features represented in the solution subject to a budget 
+*Maximum phylogenetic endemism objective:* Maximize the phylogenetic endemism of the features represented in the solution subject to a budget
+
+
 
 
 
