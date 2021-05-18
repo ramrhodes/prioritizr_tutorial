@@ -144,14 +144,6 @@ plot(fishing_cost)
 
 fishing_cost_df <- as.data.frame(fishing_cost)
 
-## TEST WILL DELETE
-# mz_rast <- raster(here("cleaned_data", "mz_eez_rast.tif"))
-# area_cost <- raster(here("cleaned_data", "mz_eez_rast.tif"))
-# 
-# values(area_cost) <- 0.5
-# area_cost <- mask(area_cost, mz_rast)
-# 
-# plot(area_cost)
 ```
 
 
