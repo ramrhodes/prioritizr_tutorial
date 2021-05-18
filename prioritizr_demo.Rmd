@@ -80,54 +80,34 @@ The size of the planning unit can impact the outcomes of the reserve design, so 
 important to carefully consider the spatial scale of the planning unit - for this exercise we will rasterize the project area to produce a grid of cells at 10km^2 resolution. 
 
 ```{r}
-## Grab Mozambique's EEZ shapefile
-mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
-
-## check coordinate system
-st_crs(mz_eez_sf)
-
-## Use Moz EEZ to set extent for future rasters
-mz_ext <- raster::extent(mz_eez_sf)
-
-## To create planning units, create raster with cell ids with a resolution of 10,000 km and clip to MZ EEZ raster
-mz_eez_rast <- raster::raster(x=mz_ext, crs=crs(mz_eez_sf), res=10000)
-
-## Assign cell values
-values(mz_eez_rast) <- 1:ncell(mz_eez_rast) 
-
-## Create data frame to check it out
-mz_eez_rast_df <- rasterToPoints(mz_eez_rast) %>%
-  as.data.frame()
-
-## Plot to make sure it looks good
-plot(mz_eez_rast)
-
-## Mask it to only include the EEZ
-mz_eez_rast <- mask(mz_eez_rast, mz_eez_sf)
-plot(mz_eez_rast)
-
-## Store as object called pu for planning unit
-mz_pu <- mz_eez_rast
+# Load raster of Mozambique Exlusive Economic Zone (EEZ) 
+mozambique_eez <- raster(here("cleaned_data", "mz_eez_rast.tif"))
 ```
 
 
 ## Step 2. Conservation Features 
-For this exercise we will use spatial data of species distribution from IUCN and five critical habitats that are important for sharks and rays. For brevity, we will load in the species and critical habitat spatial data that has already been pre-processed (rasterized & projected in the same coordinate system) - if you would like to see how we did this you can check out the `set-up.RMD`. 
+For this exercise we will use spatial data of 5 shark and ray species distribution from IUCN and two critical habitats that are important for sharks and rays. For brevity, we will load in the species and critical habitat spatial data that has already been pre-processed (rasterized & projected in the same coordinate system) - if you would like to see how we did this you can check out the `set-up.RMD`. 
 
 ```{r}
-## Pull in species & habitat rasters from 'cleaned_data' folder
+# Pull in species & habitat rasters from 'cleaned_data' folder
+## Ray species
 devil_ray_rast <- raster(here("cleaned_data", "devil_ray.tif"))
 sawfish_rast <- raster(here("cleaned_data", "sawfish.tif"))
 reef_manta_rast <- raster(here("cleaned_data", "reef_manta.tif"))
+
+## Shark species
 scalloped_hammerhead_rast <- raster(here("cleaned_data", "scalloped_hammerhead.tif"))
 dusky_shark_rast <- raster(here("cleaned_data", "dusky_shark.tif"))
+
+## Habitat
 knolls_habitat <- raster(here("cleaned_data", "knolls.tif"))
 seamounts_habitat <- raster(here("cleaned_data", "seamounts.tif"))
 
-## Create a raster stack of all the conservation features
+# Create a raster stack of all the conservation features
+## note to create a raster stack, all rasters must have the same extent and resolution
 feature_stack <- stack(devil_ray_rast, sawfish_rast, reef_manta_rast, scalloped_hammerhead_rast, dusky_shark_rast, knolls_habitat, seamounts_habitat)
 
-## Plot to see what it looks like
+# Plot to see what it looks like
 plot(feature_stack)
 ```
 
@@ -142,6 +122,7 @@ fishing_cost <- raster(here("cleaned_data", "fishing_stack.tif"))
 ## Plot to see what it looks like
 plot(fishing_cost)
 
+## Create data frame to see what the data looks like - cost ranges from 0.001 - 25
 fishing_cost_df <- as.data.frame(fishing_cost)
 
 ```
@@ -161,23 +142,23 @@ The conservation targets are the minimum proportion of our conservation features
 Now that we have decided those two things, we can construct the conservaiton problem:
 
 ```{r}
-# define the problem using the cost, conservation features, objective, and targets
+# Define the problem using the cost, conservation features, objective, and targets
 prob_1 <- problem(fishing_cost, feature_stack) %>% 
   add_min_set_objective() %>% 
   add_relative_targets(0.1) %>% 
   add_gurobi_solver(gap = 0.01, time_limit = 2100)
 
-# print problem
+# Print problem
 print(prob_1)
 ```
 
 ## Step 5. Solve the problem 
 To solve the problem, we will run *prioritizr* using a solver or optimization software. The recommended and most common one used is Gurobi, which has special licenses available to academics at no cost. If you have not already downloaded this, please see the README.md for instructions. 
 ```{r}
-# solve the problem
+## Solve the problem
 sprob_1 <- solve(prob_1)
 
-# plot the solution to see what it looks like
+## plot the solution to see what it looks like
 plot(sprob_1,  main = c("10% Targets"))
 ```
 
@@ -189,7 +170,6 @@ Now that you've defined your baseline problem, you can adjust your model with di
 
 ## Changing Targets 
 ```{r}
-
 # Let's change our prob_1 target to include 30% of the conservation features, instead of 10%
 
 ## Baseline -30% target
@@ -209,10 +189,10 @@ plot(sprob_area_30,  main = c("Area- 30% Targets"))
 ```{r}
 # Here, we lock-in existing Marine Protected Areas
 
-### read in existing mpas raster
+## Read in existing mpas raster
 exist_mpas <- raster(here("cleaned_data", "mpa_rast.tif"))
 
-### plot to make sure it looks okay
+## Plot to make sure it looks okay
 plot(exist_mpas)
 
 ## Run model with locked-in constraints: 
@@ -262,7 +242,7 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
 ```
 
 ## Different Conservation Problems
-#
+
 #Irreplaceability:
 Now let’s explore which planning units selected in the prioritization are most important for meeting our targets as cost-effectively as possible. To achieve this, we will calculate importance (irreplacability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Furthermore, planning units with infinite scores are irreplaceable—it is impossible to meet our targets without protecting these planning units. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
 

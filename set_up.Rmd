@@ -33,9 +33,9 @@ library(tmap)
 #### **Mozambique's EEZ**
 ```{r}
 ## Grab Mozambique's EEZ shapefile
-mz_eez_sf <- sf::read_sf(here("data", "mz_eez"))
+mz_eez_sf <- sf::read_sf(here("raw_data", "mz_eez"))
 
-## check coordinate system
+## Check coordinate system
 st_crs(mz_eez_sf)
 
 ## Use Moz EEZ to set extent for future rasters
@@ -83,7 +83,7 @@ crs(mpa_rast)
 ## Plot to make sure it looks good, note this shapefile includes all terrestrial protected areas as well so we need to clip it to just include those in the water (the EEZ)
 plot(mpa_rast)
 
-## Mask the rater to the EEZ 
+## Mask the raster to the EEZ 
 mpa_rast <- mask(mpa_rast, mz_eez_sf) 
 
 ## Double check CRS of new raster & plot to make sure it looks good
@@ -201,18 +201,6 @@ plot(knolls)
 # Looks good - lets save as a tif
 writeRaster(knolls, here('cleaned_data/knolls.tif'), overwrite = TRUE)
 ```
-
-#### Create Raster Stack of Habitats and Species
-```{r}
-cfeatures_stack <- stack(devil_ray, sawfish, seamounts, knolls)
-
-plot(cfeatures_stack, main = paste("Feature", seq_len(nlayers(cfeatures_stack))),
-     nr = 2, box = FALSE, axes = FALSE)
-
-## Looks good, let's save as a multilayer feature tif
-writeRaster(cfeatures_stack, filename=here("cleaned_data", "cfeatures_stack.tif"), options="INTERLEAVE=BAND", overwrite=TRUE)
-```
-
 
 ## Cost Layer
 
