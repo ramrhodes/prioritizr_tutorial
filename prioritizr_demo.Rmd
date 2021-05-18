@@ -26,7 +26,9 @@ library(stringr)
 library(janitor)
 library(prioritizr)
 library(rgdal)
+library(slam)
 library(gurobi)
+
 ```
 
 # Session summary
@@ -75,7 +77,7 @@ The size of the planning unit can impact the outcomes of the reserve design, so 
 important to carefully consider the spatial scale of the planning unit - for this exercise we will rasterize the project area to produce a grid of cells at 10km^2 resolution. 
 
 ```{r}
-# Load raster of Mozambique Exlusive Economic Zone (EEZ) 
+# Load raster of Mozambique Exclusive Economic Zone (EEZ) 
 mozambique_eez <- raster(here("cleaned_data", "mz_eez_rast.tif"))
 ```
 
@@ -134,7 +136,7 @@ The problem objective defines the overall goal of the conservation plan. This ca
 
 The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 10%  across all features, so we are saying the reserve system must include at least 10% of each species distribution and at least 10% of each critical habitat: `add_relative_targets(0.1)`
 
-Now that we have decided those two things, we can construct the conservaiton problem:
+Now that we have decided those two things, we can construct the conservation problem:
 
 ```{r}
 # Define the problem using the cost, conservation features, objective, and targets
@@ -168,15 +170,15 @@ Now that you've defined your baseline problem, you can adjust your model with di
 # Let's change our prob_1 target to include 30% of the conservation features, instead of 10%
 
 ## Baseline -30% target
-prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
+prob_30 <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3)
 
 ## Solve problem
-sprob_area_30 <- solve(prob_area_30)
+sprob_30 <- solve(prob_30)
 
 ## Plot the solution to see what it looks like
-plot(sprob_area_30,  main = c("Area- 30% Targets"))
+plot(sprob_30,  main = c("Area- 30% Targets"))
 
 ```
 
@@ -191,16 +193,17 @@ exist_mpas <- raster(here("cleaned_data", "mpa_rast.tif"))
 plot(exist_mpas)
 
 ## Run model with locked-in constraints: 
-prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
+prob_30_mpa <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3) %>%
   add_locked_in_constraints(exist_mpas)
 
 ## Solve problem
-sprob_area_30 <- solve(prob_area_30)
+sprob_30_mpa <- solve(prob_30_mpa)
 
 ## Plot the solution to see what it looks like
-plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
+plot(sprob_30_mpa,  main = c("Area- 30% Targets with MPAs locked-in"))
+plot(sprob_30)
 
 ```
 
@@ -223,27 +226,6 @@ time_limit <- 120
 bp <- 0.000001
 
 # Run the model with all of the new model parameters:
-prob_area_30 <- problem(fishing_cost, features = feature_stack) %>%
-  add_min_set_objective() %>%
-  add_relative_targets(0.3) %>%
-  add_locked_in_constraints(exist_mpas) %>%
-  add_gurobi_solver(gap = gap, time_limit = time_limit) %>% 
-  add_boundary_penalties(bp)
-
-## Solve problem
-sprob_area_30 <- solve(prob_area_30)
-
-## Plot the solution to see what it looks like
-plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
-
-```
-
-
-##Summary stats
-```{r}
-# To evaluate the performance of the solution, we can calculate summary statistics.
-
-# Run the model with all of the new model parameters:
 prob_30 <- problem(fishing_cost, features = feature_stack) %>%
   add_min_set_objective() %>%
   add_relative_targets(0.3) %>%
@@ -254,16 +236,17 @@ prob_30 <- problem(fishing_cost, features = feature_stack) %>%
 ## Solve problem
 sprob_30 <- solve(prob_30)
 
-# Now calculate the summary statistics
-eval_target_coverage_summary(prob_30, sprob_30)
-
 ## Plot the solution to see what it looks like
 plot(sprob_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
-
+plot(sprob_30_mpa)
 ```
 
 
 ## Other Considerations (NEW TO prioritizr)
+
+#Summary stats use 'eval_target_coverage_summary(prob_30, sprob_30)':
+To evaluate the performance of the solution, we can calculate summary statistics.
+
 #For Contiguious Reserve Designs use `add_contiguity_constraints`
 To maintain connectivity and dispersal capacity between reserves, we can add contiguity constraints.
 
@@ -280,6 +263,8 @@ Can find more details here: https://cran.r-project.org/web/packages/prioritizr/v
 *Minimum largest shortfall objective:* Minimize the largest (maximum) shortfall while ensuring that the cost of the solution does not exceed a budget.
 *Maximum phylogenetic diversity objective:* Maximize the phylogenetic diversity of the features represented in the solution subject to a budget 
 *Maximum phylogenetic endemism objective:* Maximize the phylogenetic endemism of the features represented in the solution subject to a budget
+*Maximum utility objective:* Secure as much of the features as possible without exceeding a budget.
+
 
 
 
