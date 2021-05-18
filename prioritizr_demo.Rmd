@@ -260,7 +260,6 @@ eval_target_coverage_summary(prob_30, sprob_30)
 ## Plot the solution to see what it looks like
 plot(sprob_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
 
-
 ```
 
 
@@ -269,7 +268,7 @@ plot(sprob_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
 To maintain connectivity and dispersal capacity between reserves, we can add contiguity constraints.
 
 #For areas that MUST be considered in the design use `irreplaceability`:
-Some areas in your design might have be inluded in your design. These areas can now be calculated as "irreplaceable". The `irreplaceability()` function will calculate importance (irreplaceability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
+Some areas in your design might have be included in your design. These areas can now be calculated as "irreplaceable". The `irreplaceability()` function will calculate importance (irreplaceability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
 
 ## Different Conservation Problems
 
