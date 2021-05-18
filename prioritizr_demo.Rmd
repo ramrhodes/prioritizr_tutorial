@@ -38,7 +38,7 @@ The analysis presented in this tutorial comes from a USCB Bren School of Environ
 ## What is Prioritizr?
 The *prioritizr* R package is a systematic conservation planning tool that is used to design an optimal system of protected areas that meet conservation objectives using ecological, social, and economic criteria. Specifically, this tool is used to conduct spatial prioritization that finds the efficient spatial allocation of priority areas by formulating a mathematical optimization problem and then solving it to find an efficient solution. This type of tool is useful for conservation planning because it can help inform decisions on how and where to focus conservation efforts given limited resources and can make for a more transparent and reproducible decision making process. 
 
-For those of you familiar with other conservation planning software like Marxan,  *prioritizr* is similar, however, instead of using simulated annealing, *prioritizr* uses integer linear programming (ILP) and an algorithm solver to find the exact optimal solution and can help find cheaper solutions in a shorter period of time. It requires similar inputs which are described below. 
+For those of you familiar with other conservation planning software like Marxan, *prioritizr* is similar, however, instead of using simulated annealing, *prioritizr* uses integer linear programming (ILP) and an algorithm solver to find the exact optimal solution and can help find cheaper solutions in a shorter period of time. It requires similar inputs which are described below. 
 
 ## Necessary Inputs
 The following parameters are required to conduct and solve a conservation planning exercise with *prioritizr*: 
@@ -156,7 +156,7 @@ There are a few key considerations that go into this including:
 
 The problem objective defines the overall goal of the conservation plan. This can be done a number of ways including using a minimum set objective which minimizes the cost of a reserve network, while ensuring all targets are met; maximum features objective, which fulfills as many targets as possible within a specific budget; maximum phylogenetic diversity objective which maximizes phylogenetic diversity of features within a specific budget; and more. For our analysis we will use the minimum set objective, which minimizes the cost of our reserve system, while meeting our conservation targets that we specify: `add_min_set_objective()`
 
-The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 20%  across all features, so we are saying the reserve system must include at least 20% of each species distribution and at least 20% of each critical habitat: `add_relative_targets(0.2)`
+The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 10%  across all features, so we are saying the reserve system must include at least 10% of each species distribution and at least 10% of each critical habitat: `add_relative_targets(0.2)`
 
 Now that we have decided those two things, we can construct the conservaiton problem:
 
@@ -203,8 +203,6 @@ sprob_area_30 <- solve(prob_area_30)
 ## Plot the solution to see what it looks like
 plot(sprob_area_30,  main = c("Area- 30% Targets"))
 
-## Save as tif
-# writeRaster(sprob_area_30, here("final_results", "scenario_1_area",  "sprob_area_30_6hr_blm0.tif"), overwrite = TRUE)
 ```
 
 ## Locking-in/Locking-out
@@ -213,8 +211,6 @@ plot(sprob_area_30,  main = c("Area- 30% Targets"))
 
 ### read in existing mpas raster
 exist_mpas <- raster(here("cleaned_data", "mpa_rast.tif"))
-
-#exist_mpas <- setExtent(exist_mpas, ext=extent(mz_eez_rast), keepres=FALSE, snap=FALSE)                     
 
 ### plot to make sure it looks okay
 plot(exist_mpas)
@@ -234,12 +230,14 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
 ```
 
 ### Setting some global model parameters
-```{r}
 
-# Here, we'll be setting: 
-# -the gap (want the gap to be as small as possible) 
-# -time limit (how long your model will run)
-# -efficient boundary penalty (optimal penatly to reduce fragementation within your reserves)
+Here, we'll be setting:
+-the gap (want the gap to be as small as possible)
+-time limit (how long your model will run)
+-efficient boundary penalty (optimal penalty to reduce fragmentation within your reserves)
+## add info about BLM
+
+```{r}
 
 ## If you decide to change the gap, time-limit or boundary penalty value, change it here and rerun the subsequent model runs
 
@@ -263,10 +261,10 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in with BP"))
 
 ```
 
-
 ## Different Conservation Problems
+#
 #Irreplaceability:
-Now let’s explore which planning units selected in the prioritization are most important for meeting our targets as cost-effectively as possible. To achieve this, we will calculate importance (irreplaceability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Furthermore, planning units with infinite scores are irreplaceable—it is impossible to meet our targets without protecting these planning units. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
+Now let’s explore which planning units selected in the prioritization are most important for meeting our targets as cost-effectively as possible. To achieve this, we will calculate importance (irreplacability) scores using a version of the replacement cost method. Under this method, planning units with higher scores are more important for meeting the objective of our conservation planning problem than those with lower scores. Furthermore, planning units with infinite scores are irreplaceable—it is impossible to meet our targets without protecting these planning units. Note that we override the solver behavior in the code below to prevent lots of unnecessary text from being output.
 
 #For Contiguity use add_contiguity_constraints
 This solution is even better then the previous solution. However, we are not finished yet. This solution does not maintain connectivity between reserves, and so species may have limited capacity to disperse throughout the solution. To avoid this, we can add contiguity constraints (add_contiguity_constraints)
