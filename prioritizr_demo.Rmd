@@ -54,9 +54,9 @@ The following parameters are required to conduct and solve a conservation planni
 5. Problem objective: defines the overall goal of the conservation plan & whether a specific property of the solution should be maximized or minimized (there are a number of different types of objectives that can be used which are described more later)
 
 ## Example data
-**Mozambique Exclusive Economic Zone (EEZ):** 
 
-**Species Data:** IUCN 2021. The IUCN Red List of Threatened Species. Version 2021-1. <https://www.iucnredlist.org>
+**Species Data:** 
+IUCN 2021. The IUCN Red List of Threatened Species. Version 2021-1. <https://www.iucnredlist.org>
 
 **Habitat:** 
 Coral & Seagrass: Allen Coral Atlas maps, bathymetry and map statistics are © 2018-2021 Allen Coral Atlas Partnership and Vulcan, Inc. and licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
@@ -65,7 +65,6 @@ Mangroves: Giri C, Ochieng E, Tieszen LL, Zhu Z, Singh A, Loveland T, Masek J, D
 
 Seamount & Knolls: Yesson C, Clark MR, Taylor M, Rogers AD (2011). The global 
 distribution of seamounts based on 30-second bathymetry data. Deep Sea Research Part I: Oceanographic Research Papers 58: 442-453. DOI: http://dx.doi.org/10.1016/j.dsr.2011.02.004. Data DOI: http://doi.pangaea.de/10.1594/PANGAEA.757564
-
 
 **Fishing Pressure:** 
 Global Fishing Watch
@@ -137,7 +136,7 @@ There are a few key considerations that go into this including:
 
 The problem objective defines the overall goal of the conservation plan. This can be done a number of ways including using a minimum set objective which minimizes the cost of a reserve network, while ensuring all targets are met; maximum features objective, which fulfills as many targets as possible within a specific budget; maximum phylogenetic diversity objective which maximizes phylogenetic diversity of features within a specific budget; and more. For our analysis we will use the minimum set objective, which minimizes the cost of our reserve system, while meeting our conservation targets that we specify: `add_min_set_objective()`
 
-The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 10%  across all features, so we are saying the reserve system must include at least 10% of each species distribution and at least 10% of each critical habitat: `add_relative_targets(0.2)`
+The conservation targets are the minimum proportion of our conservation features’ distribution that needs to be protected and included in the prioritization (or reserve design). These targets can be thought of as a quantitative interpretation of our conservation goal, and thus should be set at the amount required to ensure the long-term persistence of our focal species, habitat, or population. For this example, we will use a uniform conservation target of 10%  across all features, so we are saying the reserve system must include at least 10% of each species distribution and at least 10% of each critical habitat: `add_relative_targets(0.1)`
 
 Now that we have decided those two things, we can construct the conservaiton problem:
 
@@ -212,17 +211,18 @@ plot(sprob_area_30,  main = c("Area- 30% Targets with MPAs locked-in"))
 ### Setting some global model parameters
 
 Here, we'll be setting:
--the gap (want the gap to be as small as possible)
--time limit (how long your model will run)
--efficient boundary penalty (optimal penalty to reduce fragmentation within your reserves)
+-*the gap* (the optimality gap tolerance you are willing to allow the solver to declare as an optimal solution, even though the model may have other, better solutions - we want the gap to be as small as possible)
+-*time limit* (how long your model will run)
+-*efficient boundary penalty* (optimal penalty to reduce fragmentation within your reserves)
 
-Sometimes you might want to avoid fragmentation in your design for management feasibility or designing for mobile and migratory species where larger reserves will be more effective for conservation than smaller fragmented reserves.To avoid highly fragmented solution, you use a boundary penalty. But know that using a boundary penalty is trade off -  by setting a high boundary penalty the model will prioritize solutions that are less fragmented even if they cost more. 
+Boundary penalty: Sometimes you might want to avoid fragmentation in your design for management feasibility or designing for mobile and migratory species where larger reserves will be more effective for conservation than smaller fragmented reserves.To avoid highly fragmented solution, you use a boundary penalty. But know that using a boundary penalty is trade off -  by setting a high boundary penalty the model will prioritize solutions that are less fragmented even if they cost more. 
 
 ```{r}
 
 ## If you decide to change the gap, time-limit or boundary penalty value, change it here and rerun the subsequent model runs
+# Here, setting both a relative gap and time limit the solver will terminate after 24 hours OR when the relative gap is less than 1%
 
-gap <- 0.01
+gap <- 0.01 
 time_limit <- 120
 bp <- 0.000001
 
